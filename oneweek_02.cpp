@@ -43,17 +43,12 @@ int main(){
   int ny = 100;
   int ns = 100;
   cout<<"P3\n" << nx <<" " << ny << "\n255\n";
-  // vec3 lower_left_corner(-2.0, -1.0, -1.0);
-  // vec3 horizontal(4.0, 0.0, 0.0);
-  // vec3 vertical(0.0, 2.0, 0.0);
-  // vec3 origin(0.0, 0.0, 0.0);
   hitable *list[4];
-  // list[0] = new sphere(vec3(0, 0, -1), 0.5);
-  // list[1] = new sphere(vec3(0, -100.5, -1), 100);
-  list[0] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.8, 0.3, 0.3)));
+  list[0] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.1, 0.2, 0.5)));
   list[1] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.8, 0.8, 0.0)));
-  list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2)));
-  list[3] = new sphere(vec3(-1, 0, -1), 0.5, new metal(vec3(0.8, 0.8, 0.8)));
+  list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2), 0.3));
+  // list[3] = new sphere(vec3(-1, 0, -1), 0.5, new metal(vec3(0.8, 0.8, 0.8), 1.0));
+  list[3] = new sphere(vec3(-1, 0, -1), 0.5, new dielectric(1.7));
   hitable *world = new hitable_list(list, 4);
   camera cam;
   for(int j=ny-1; j>=0; j--)
