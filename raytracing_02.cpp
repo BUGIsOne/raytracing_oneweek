@@ -43,7 +43,7 @@ vec3 color(const ray &r, hitable *world, int depth)
 
 hitable *random_scene()
 {
-  int n = 500;
+  int n = 50000;
   hitable **list = new hitable *[n + 1];
   list[0] = new sphere(vec3(0, -1000, 0), 1000, new lambertian(vec3(0.5, 0.5, 0.5)));
   int i = 1;
@@ -57,10 +57,10 @@ hitable *random_scene()
       {
         if (choose_mat < 0.8) // diffuse
         {
-          list[i++] = new sphere(center, 0.2,
-                                 new lambertian(vec3(random_double() * random_double(),
-                                                     random_double() * random_double(),
-                                                     random_double() * random_double())));
+          list[i++] = new moving_sphere(center, center+vec3(0, 0.5*drand48(), 0), 0.0, 1.0, 0.2,
+                        new lambertian(vec3(random_double() * random_double(),
+                                            random_double() * random_double(),
+                                            random_double() * random_double())));
         }
         else if (choose_mat < 0.95) // metal
         {
@@ -88,8 +88,8 @@ hitable *random_scene()
 int main()
 {
   freopen("out.txt", "w", stdout);
-  int nx = 1200;
-  int ny = 800;
+  int nx = 300;
+  int ny = 200;
   int ns = 10;
   cout << "P3\n"
        << nx << " " << ny << "\n255\n";
@@ -100,7 +100,8 @@ int main()
   float dist_to_focus = 10.0;
   float aperture = 0.1;
 
-  camera cam(lookfrom, lookat, vec3(0, 1, 0), 20, float(nx) / float(ny), aperture, dist_to_focus);
+  camera cam(lookfrom, lookat, vec3(0, 1, 0), 20, float(nx) / float(ny), aperture, dist_to_focus,
+      0.0, 1.0);
 
   for (int j = ny - 1; j >= 0; j--)
   {
