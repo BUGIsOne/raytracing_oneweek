@@ -3,7 +3,8 @@
 #include "hitable.h"
 #include "drand48.h"
 
-// pick a random point "in" the cube. z axis between -1 to +1
+struct hit_record;
+// pick a random point "in" the cube. x,y,z between -1 to +1
 vec3 random_in_unit_sphere() {
   vec3 p;
   do{
@@ -30,6 +31,7 @@ bool refract(const vec3& v, const vec3& n, float ni_over_nt, vec3& refracted){
 }
 
 // for glass, a simple polynomial approximation by Schlick
+// varies with angles
 float schlick(float cosine, float ref_idx){
   float r0 = (1-ref_idx) / (1+ref_idx);
   r0 = r0*r0;
@@ -47,6 +49,7 @@ class lambertian: public material {
     lambertian(const vec3& a): albedo(a) {}
     virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const{
       vec3 target = rec.p + rec.normal + random_in_unit_sphere();
+      // have scattered rays at the time of incident ray
       scattered = ray(rec.p, target-rec.p);
       attenuation = albedo;
       return true;
@@ -57,13 +60,13 @@ class lambertian: public material {
 
 class metal: public material {
   public:
-    metal(const vec3& a): albedo(a) {}
-    // metal(const vec3& a, float f): albedo(a) {
-    //   if(f < 1)
-    //     fuzz = f;
-    //   else
-    //     fuzz = 1;
-    // }
+    // metal(const vec3& a): albedo(a) {}
+    metal(const vec3& a, float f): albedo(a) {
+      if(f < 1)
+        fuzz = f;
+      else
+        fuzz = 1;
+    }
     virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuaion, ray& scattered) const{
       vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
       // the bigger the sphere, the fuzzier the reflections will be
@@ -81,7 +84,7 @@ class dielectric: public material {
     dielectric(float ri): ref_idx(ri) {}
     virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const{
       vec3 outward_normal;
-      // for dielectric, there is reflected, and refraction
+      // still use to scattered
       vec3 reflected = reflect(r_in.direction(), rec.normal);
       float ni_over_nt;
       // kill the blue channel (?whaaat)
@@ -95,6 +98,8 @@ class dielectric: public material {
         outward_normal = -rec.normal;
         ni_over_nt = ref_idx;
         cosine = ref_idx * dot(r_in.direction(), rec.normal) / r_in.direction().length();
+        // cosine = dot(r_in.direction(), rec.normal) / r_in.direction().length();
+        // cosine = sqrt(1 - ref_idx*ref_idx*(1-cosine*cosine));
       }
       else
       {
@@ -107,15 +112,19 @@ class dielectric: public material {
         reflect_prob = schlick(cosine, ref_idx);
       else
       {
-        scattered = ray(rec.p, refracted);
+        // // a performance bug
+        // scattered = ray(rec.p, reflected);
         reflect_prob = 1.0;
       }
 
+      // there is the bug, I typed it refracted
       if(drand48() < reflect_prob)
+      {
         scattered = ray(rec.p, reflected);
+      }
       else
-        scattered = ray(rec.p, reflected);
-
+        scattered = ray(rec.p, refracted);
+      
       return true;
     }
 
