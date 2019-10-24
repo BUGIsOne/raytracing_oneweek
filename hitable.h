@@ -7,7 +7,7 @@ class material;
 
 struct hit_record {
   float t;
-  vec3 p; // array, from start point to end
+  vec3 p; // array, from start point to (0, 0)
   vec3 normal;
   material *mat_ptr; // to point a class by pointer;
 };

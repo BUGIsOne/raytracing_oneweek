@@ -20,7 +20,7 @@ public:
                         (_max[a]-r.origin()[a]) / r.direction()[a]);
             float t1 = ffmax((_min[a]-r.origin()[a]) / r.direction()[a],
                         (_max[a]-r.origin()[a]) / r.direction()[a]);
-            // cause it along -w axis, (_min, _max) actually (-2, -3)
+            // suppose tmin < tmax
             tmin = ffmax(t0, tmin);
             tmax = ffmin(t1, tmax);
             if(tmax <= tmin)

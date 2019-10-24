@@ -11,6 +11,7 @@ class constant_texture: public texture{
 public:
     constant_texture() {}
     constant_texture(vec3 c): color(c) {}
+    // return texture's color
     virtual vec3 value(float u, float v, const vec3& p) const{
         return color;
     }
@@ -37,11 +38,16 @@ public:
 class noise_texture: public texture{
 public:
     noise_texture() {}
+    // hermite cubic is a bit low frequency, so scale the input point
+    noise_texture(float sc): scale(sc) {}
     virtual vec3 value(float u, float v, const vec3& p) const{
-        return vec3(1, 1, 1)*noise.noise(p);
+        // return vec3(1, 1, 1)*noise.noise(p);
+        // return vec3(1,1,1) * noise.noise(scale*p);
+        return vec3(1,1,1) * 0.5 * (1+sin(scale*p.z() + 10*noise.turb(p)));
     }
 
     perlin noise;
+    float scale;
 };
 
 #endif

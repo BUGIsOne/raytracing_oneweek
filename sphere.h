@@ -74,6 +74,7 @@ class moving_sphere: public hitable{
     material *mat_ptr;
 };
 
+// all object can realize motion blur
 vec3 moving_sphere::center(float time) const{
   return center0 + ((time - time0) / (time1 - time0)) * (center1 - center0);
 }

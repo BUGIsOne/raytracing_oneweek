@@ -102,7 +102,7 @@ hitable *two_spheres(){
 }
 
 hitable *two_perlin_spheres(){
-  texture *pertext = new noise_texture();
+  texture *pertext = new noise_texture(3);
   hitable **list = new hitable*[2];
   list[0] = new sphere(vec3(0, -1000, 0), 1000, new lambertian(pertext));
   list[1] = new sphere(vec3(0, 2, 0), 2, new lambertian(pertext));
