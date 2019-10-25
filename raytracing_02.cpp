@@ -8,6 +8,7 @@
 #include "material.h"
 #include "float.h"
 #include "aarect.h"
+#include "constant_medium.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -133,7 +134,7 @@ hitable *simple_light() {
 }
 
 hitable *cornell_box() {
-  hitable **list = new hitable*[6];
+  hitable **list = new hitable*[8];
   int i=0;
 
   material *red = new lambertian(new constant_texture(vec3(0.65, 0.05, 0.05)));
@@ -159,12 +160,41 @@ hitable *cornell_box() {
   return new hitable_list(list, i);
 }
 
+// replace smoke and fog (dark and light particles), and make light bigger
+// for faster convergence
+hitable *cornell_smoke() {
+  hitable **list = new hitable*[8];
+  int i = 0;
+  material *red = new lambertian(new constant_texture(vec3(0.65, 0.05, 0.05)));
+  material *white = new lambertian(new constant_texture(vec3(0.73, 0.73, 0.73)));
+  material *green = new lambertian(new constant_texture(vec3(0.12, 0.45, 0.15)));
+  material *light = new diffuse_light(new constant_texture(vec3(7, 7, 7)));
+
+  list[i++] = new flip_normals(new yz_rect(0, 555, 0, 555, 555, green));
+  list[i++] = new yz_rect(0, 555, 0, 555, 0, red);
+  list[i++] = new xz_rect(113, 443, 127, 432, 554, light);
+  list[i++] = new flip_normals(new xz_rect(0, 555, 0, 555, 555, white));
+  list[i++] = new xz_rect(0, 555, 0, 555, 0, white);
+  list[i++] = new flip_normals(new xy_rect(0, 555, 0, 555, 555, white));
+
+  hitable *b1 = new translate(new rotate_y(new box(vec3(0, 0, 0), vec3(165, 165, 165), 
+        white), 18), vec3(130, 0, 65));
+  hitable *b2 = new translate(new rotate_y(new box(vec3(0, 0, 0), vec3(165, 330, 165),
+        white), 15), vec3(265, 0, 295));
+  
+  list[i++] = new constant_medium(b1, 0.01, new constant_texture(vec3(1.0, 1.0, 1.0)));
+  list[i++] = new constant_medium(b2, 0.01, new constant_texture(vec3(0.0, 0.0, 0.0)));
+
+  return new hitable_list(list, i);
+}
+
+
 int main()
 {
   freopen("out.txt", "w", stdout);
-  int nx = 200;
-  int ny = 200;
-  int ns = 600;
+  int nx = 300;
+  int ny = 300;
+  int ns = 1000;
   cout << "P3\n"<< nx << " " << ny << "\n255\n";
   
   // hitable *world = random_scene();
@@ -172,7 +202,8 @@ int main()
   // hitable *world = two_perlin_spheres();
   // hitable *world = earth();
   // hitable *world = simple_light();
-  hitable *world = cornell_box();
+  // hitable *world = cornell_box();
+  hitable *world = cornell_smoke();
 
   // vec3 lookfrom(13, 6, 10);
   // vec3 lookat(0, 0, 0);
