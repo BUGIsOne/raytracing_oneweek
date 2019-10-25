@@ -8,6 +8,9 @@
 #include "material.h"
 #include "float.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 using namespace std;
 
 vec3 color(const ray &r, hitable *world, int depth)
@@ -109,25 +112,38 @@ hitable *two_perlin_spheres(){
   return new hitable_list(list, 2);
 }
 
+hitable *earth() {
+  // use texture
+  int nx, ny, nn;
+  unsigned char *tex_data = stbi_load("earth.jpg", &nx, &ny, &nn, 0);
+  material *mat = new lambertian(new image_texture(tex_data, nx, ny));
+
+  return new sphere(vec3(0, 0, 0), 60, mat);
+}
+
 int main()
 {
   freopen("out.txt", "w", stdout);
-  int nx = 300;
-  int ny = 200;
+  int nx = 500;
+  int ny = 350;
   int ns = 100;
   cout << "P3\n"<< nx << " " << ny << "\n255\n";
   
   // hitable *world = random_scene();
   // hitable *world = two_spheres();
-  hitable *world = two_perlin_spheres();
+  // hitable *world = two_perlin_spheres();
+  hitable *world = earth();
 
-  vec3 lookfrom(13, 2, 3);
+  vec3 lookfrom(8, 5, 100);
+  // vec3 lookat(0, 0, 0);
+  // vec3 lookfrom(100, 80, 3);
   vec3 lookat(0, 0, 0);
-  float dist_to_focus = 10.0;
+  float dist_to_focus = 3.0;
   float aperture = 0.0;
+  float vfov = 90;
 
-  camera cam(lookfrom, lookat, vec3(0, 1, 0), 20, float(nx) / float(ny), aperture, dist_to_focus,
-      0.0, 0.0);
+  camera cam(lookfrom, lookat, vec3(0, 1, 0), vfov, float(nx) / float(ny), aperture, dist_to_focus,
+      0.0, 1.0);
 
   for (int j = ny - 1; j >= 0; j--)
   {
