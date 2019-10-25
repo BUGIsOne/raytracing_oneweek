@@ -7,6 +7,7 @@
 #include "camera.h"
 #include "material.h"
 #include "float.h"
+#include "aarect.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -16,31 +17,30 @@ using namespace std;
 vec3 color(const ray &r, hitable *world, int depth)
 {
   hit_record rec;
-  // if(world->hit(r, 0.0, FLT_MAX, rec))
-  // reflected rays hit the object not exactly t = 0
+
   if (world->hit(r, 0.001, FLT_MAX, rec))
   {
-    // // return 0.5*vec3(rec.normal.x()+1, rec.normal.y()+1, rec.normal.z()+1);
-    // vec3 target = rec.p + rec.normal + random_in_unit_sphere();
-    // // for better understand: rec.p is the start point of an array
-    // return 0.5*color(ray(rec.p, target-rec.p), world);
     ray scattered;
     vec3 attenuation;
+    vec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
     if (depth < 50 && rec.mat_ptr->scatter(r, rec, attenuation, scattered))
     {
-      return attenuation * color(scattered, world, depth + 1);
+      // return attenuation * color(scattered, world, depth + 1);
+      return emitted + attenuation * color(scattered, world, depth+1);
     }
     else
     {
-      return vec3(0, 0, 0);
+      // return vec3(0, 0, 0);
+      return emitted;
     }
   }
   else
   {
-    // draw the backgroud
-    vec3 unit_direction = unit_vector(r.direction());
-    float t = 0.5 * (unit_direction.y() + 1.0);
-    return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
+    // // draw the backgroud
+    // vec3 unit_direction = unit_vector(r.direction());
+    // float t = 0.5 * (unit_direction.y() + 1.0);
+    // return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
+    return vec3(0, 0, 0);
   }
 }
 
@@ -121,24 +121,56 @@ hitable *earth() {
   return new sphere(vec3(0, 0, 0), 60, mat);
 }
 
+hitable *simple_light() {
+  texture *pertext = new noise_texture(4);
+  hitable **list = new hitable*[4];
+  list[0] = new sphere(vec3(0, -1000, 0), 1000, new lambertian(pertext));
+  list[1] = new sphere(vec3(0, 2, 0), 2, new lambertian(pertext));
+  list[2] = new sphere(vec3(0, 7, 0), 2, new diffuse_light(new constant_texture(vec3(4, 4, 4))));
+  list[3] = new xy_rect(3, 5, 1, 3, -2, new diffuse_light(new constant_texture(vec3(4, 4, 4))));
+
+  return new hitable_list(list, 4);
+}
+
+hitable *cornell_box() {
+  hitable **list = new hitable*[6];
+  int i=0;
+
+  material *red = new lambertian(new constant_texture(vec3(0.65, 0.05, 0.05)));
+  material *white = new lambertian(new constant_texture(vec3(0.73, 0.73, 0.73)));
+  material *green = new lambertian(new constant_texture(vec3(0.12, 0.45, 0.15)));
+  material *light = new diffuse_light(new constant_texture(vec3(15, 15, 15)));
+
+  list[i++] = new flip_normals(new yz_rect(0, 555, 0, 555, 555, green));
+  list[i++] = new yz_rect(0, 555, 0, 555, 0, red);
+  list[i++] = new xz_rect(213, 343, 227, 332, 554, light);
+  list[i++] = new flip_normals(new xz_rect(0, 555, 0, 555, 555, white));
+  list[i++] = new xz_rect(0, 555, 0, 555, 0, white);
+  list[i++] = new flip_normals(new xy_rect(0, 555, 0, 555, 555, white));
+
+  return new hitable_list(list, i);
+}
+
 int main()
 {
   freopen("out.txt", "w", stdout);
-  int nx = 500;
-  int ny = 350;
-  int ns = 100;
+  int nx = 600;
+  int ny = 400;
+  int ns = 500;
   cout << "P3\n"<< nx << " " << ny << "\n255\n";
   
   // hitable *world = random_scene();
   // hitable *world = two_spheres();
   // hitable *world = two_perlin_spheres();
-  hitable *world = earth();
+  // hitable *world = earth();
+  // hitable *world = simple_light();
+  hitable *world = cornell_box();
 
-  vec3 lookfrom(8, 5, 100);
+  // vec3 lookfrom(13, 6, 10);
   // vec3 lookat(0, 0, 0);
-  // vec3 lookfrom(100, 80, 3);
-  vec3 lookat(0, 0, 0);
-  float dist_to_focus = 3.0;
+  vec3 lookfrom(278, 278, -800);
+  vec3 lookat(278, 278, 0);
+  float dist_to_focus = 10.0;
   float aperture = 0.0;
   float vfov = 90;
 
